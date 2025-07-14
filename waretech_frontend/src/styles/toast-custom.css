@@ -1,0 +1,22 @@
+.blue-toast {
+  background-color: #007bff !important; /* xanh dương */
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.4);
+}
+
+.blue-toast-progress {
+  background: #ff7f50 !important; /* cam */
+}
+
+/* Nếu bạn dùng toast loại success mặc định */
+.Toastify__toast--success {
+  background-color: #007bff !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.4);
+}
+
+.Toastify__toast--success .Toastify__progress-bar {
+  background: #ff7f50 !important;
+}

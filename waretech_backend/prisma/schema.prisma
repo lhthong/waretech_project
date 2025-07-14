@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model categories {
+  id             Int        @id @default(autoincrement())
+  categorie_name String?    @unique(map: "categorie_name") @db.VarChar(100)
+  icon           String?    @db.VarChar(100)
+  products       products[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model products {
+  id                Int                 @id @default(autoincrement())
+  product_name      String?             @db.VarChar(100)
+  product_code      String?             @unique(map: "product_code") @db.VarChar(50)
+  description       String?             @db.Text
+  category_id       Int?
+  import_price      Int
+  sell_price        Int
+  stock_quantity    Int                 @default(0)
+  min_stock_level   Int?
+  max_stock_level   Int?
+  deleted_at        DateTime?           @db.Timestamp(0)
+  cart_items        cart_items[]
+  featured_products featured_products[]
+  order_details     order_details[]
+  phieu_nhap        phieu_nhap?
+  phieu_xuat        phieu_xuat?
+  product_images    product_images[]
+  product_reviews   product_reviews[]
+  categories        categories?         @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "products_ibfk_1")
+
+  @@index([category_id], map: "category_id")
+}
+
+model users {
+  iduser          Int               @id @default(autoincrement())
+  username        String            @unique(map: "username") @db.VarChar(50)
+  password        String?           @db.VarChar(255)
+  fullname        String            @db.VarChar(100)
+  phone           String?           @unique(map: "phone") @db.VarChar(15)
+  gender          users_gender?
+  address         String?           @unique(map: "cccd") @db.VarChar(500)
+  avatar          String?           @db.VarChar(255)
+  permission      users_permission?
+  tokenVersion    Int               @default(0)
+  cart_items      cart_items[]
+  orders          orders[]
+  phieu_nhap      phieu_nhap[]
+  phieu_xuat      phieu_xuat[]
+  product_reviews product_reviews[]
+}
+
+model order_details {
+  id          Int       @id @default(autoincrement())
+  don_hang_id Int?
+  product_id  Int?
+  so_luong    Int?
+  tong_tien   Int?
+  don_hang    orders?   @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_details_ibfk_1")
+  products    products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_details_ibfk_2")
+
+  @@index([don_hang_id], map: "don_hang_id")
+  @@index([product_id], map: "product_id")
+}
+
+model phieu_nhap {
+  id          Int        @id @default(autoincrement())
+  product_id  Int        @unique(map: "unique_product_nhap")
+  so_luong    Int
+  user_id     Int
+  created_at  DateTime?  @default(now()) @db.Timestamp(0)
+  supplier_id Int?
+  products    products   @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "phieu_nhap_ibfk_1")
+  users       users      @relation(fields: [user_id], references: [iduser], onDelete: Cascade, onUpdate: NoAction, map: "phieu_nhap_ibfk_2")
+  suppliers   suppliers? @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "phieu_nhap_ibfk_3")
+
+  @@index([user_id], map: "user_id")
+  @@index([supplier_id], map: "supplier_id")
+}
+
+model phieu_xuat {
+  id         Int       @id @default(autoincrement())
+  product_id Int       @unique(map: "unique_product_xuat")
+  so_luong   Int
+  user_id    Int
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  products   products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "phieu_xuat_ibfk_1")
+  users      users     @relation(fields: [user_id], references: [iduser], onDelete: Cascade, onUpdate: NoAction, map: "phieu_xuat_ibfk_2")
+
+  @@index([user_id], map: "user_id")
+}
+
+model orders {
+  id            Int                @id @default(autoincrement())
+  ma_don_hang   String?            @unique(map: "ma_don_hang") @db.VarChar(50)
+  user_id       Int?
+  trang_thai    orders_trang_thai?
+  created_at    DateTime?          @default(now()) @db.Timestamp(0)
+  tong_tien     Int?
+  order_details order_details[]
+  users         users?             @relation(fields: [user_id], references: [iduser], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
+  payments      payments[]
+  shipping_info shipping_info?
+
+  @@index([user_id], map: "user_id")
+}
+
+model payments {
+  id             Int              @id @default(autoincrement())
+  don_hang_id    Int?
+  amount         Int?
+  method         payments_method?
+  status         payments_status?
+  created_at     DateTime?        @default(now()) @db.Timestamp(0)
+  transaction_id String?          @db.VarChar(50)
+  bank_code      String?          @db.VarChar(20)
+  pay_date       DateTime?        @db.DateTime(0)
+  orders         orders?          @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_ibfk_1")
+
+  @@index([don_hang_id], map: "don_hang_id")
+}
+
+model product_images {
+  id         Int       @id @default(autoincrement())
+  product_id Int?
+  image_url  String?   @db.VarChar(255)
+  is_main    Boolean?  @default(false)
+  products   products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_images_ibfk_1")
+
+  @@index([product_id], map: "product_id")
+}
+
+model shipping_info {
+  id              Int                           @id @default(autoincrement())
+  order_id        Int                           @unique(map: "order_id")
+  recipient_name  String                        @db.VarChar(100)
+  phone           String                        @db.VarChar(15)
+  street_address  String?                       @db.VarChar(255)
+  ward            String?                       @db.VarChar(100)
+  district        String?                       @db.VarChar(100)
+  province        String?                       @db.VarChar(100)
+  note            String?                       @db.Text
+  shipping_method shipping_info_shipping_method
+  shipping_fee    Int?                          @default(0)
+  created_at      DateTime?                     @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?                     @default(now()) @db.Timestamp(0)
+  orders          orders                        @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "shipping_info_ibfk_1")
+}
+
+model suppliers {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(255)
+  phone      String?      @db.VarChar(15)
+  address    String?      @db.Text
+  email      String       @unique(map: "email") @db.VarChar(255)
+  phieu_nhap phieu_nhap[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model product_reviews {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  product_id Int
+  rating     Int
+  comment    String?   @db.Text
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  users      users     @relation(fields: [user_id], references: [iduser], onDelete: Cascade, onUpdate: NoAction, map: "product_reviews_ibfk_1")
+  products   products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "product_reviews_ibfk_2")
+
+  @@unique([user_id, product_id], map: "unique_user_product")
+  @@index([product_id], map: "product_id")
+}
+
+model featured_products {
+  id         Int                    @id @default(autoincrement())
+  product_id Int
+  type       featured_products_type
+  priority   Int?                   @default(0)
+  products   products               @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "featured_products_ibfk_1")
+
+  @@index([product_id], map: "product_id")
+}
+
+model cart_items {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  product_id Int
+  quantity   Int       @default(1)
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  updated_at DateTime? @default(now()) @db.DateTime(0)
+  users      users     @relation(fields: [user_id], references: [iduser], onDelete: NoAction, onUpdate: NoAction, map: "cart_items_ibfk_1")
+  products   products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cart_items_ibfk_2")
+
+  @@unique([user_id, product_id], map: "unique_user_product")
+  @@index([product_id], map: "product_id")
+}
+
+model banners {
+  id        Int      @id @default(autoincrement())
+  image_url String   @db.VarChar(255)
+  is_active Boolean? @default(false)
+}
+
+model faq {
+  id                    Int       @id @default(autoincrement())
+  question              String    @db.Text
+  answer                String    @db.Text
+  keywords              String?   @db.Text
+  alternative_questions String?   @db.Text
+  status                Boolean?  @default(true)
+  created_at            DateTime? @default(now()) @db.DateTime(0)
+  updated_at            DateTime? @default(now()) @db.DateTime(0)
+}
+
+enum users_gender {
+  male
+  female
+}
+
+enum payments_status {
+  dangcho
+  dathanhtoan
+  loithanhtoan
+}
+
+enum users_permission {
+  admin
+  staff
+  client
+}
+
+enum featured_products_type {
+  featured
+  new
+}
+
+enum orders_trang_thai {
+  choxacnhan
+  daxacnhan
+  danggiao
+  hoanthanh
+  dahuy
+}
+
+enum shipping_info_shipping_method {
+  tieuchuan
+  nhanh
+}
+
+enum payments_method {
+  COD
+  Momo
+  Paypal
+}
